@@ -1,0 +1,209 @@
+# my functions
+
+
+import os
+import csv
+from fpdf import FPDF
+from collections import Counter
+from collections import defaultdict
+from array import *
+from datetime import date
+from datetime import timedelta
+
+#
+# Specify Date, separate Paper and RegNo
+# write to dd_mm_FN or AN file.csv
+# filtered on Paper Code
+#
+def input_papers(source_file):
+	
+	paper="XXX"
+	grep_str = "Student"
+	dt = str(date.today()+timedelta(days=1)).replace("/","-")
+	dt = input("Enter Date of Exam [by default '" + dt + "'] ")
+
+	if dt=="":
+		dt=str(date.today()+timedelta(days=1)).replace("/","-")
+
+	if not os.path.isdir(dt):
+		os.mkdir(dt)
+	
+	
+
+		
+	while paper != "":
+		paper = input("Enter paper...<default all records with out filtering>")
+		grep_str = grep_str + "|" + paper
+		if grep_str != 'Student|':
+			#separate RegNo and Paper from source file
+			os.system("egrep '(" + grep_str[:-1] + ")' " + source_file + " > " + dt + '/' + dt + ".csv")
+		else:
+			os.system('cp ' + source_file + ' ' + dt + '/' + dt + ".csv")
+		
+	return len(open(dt + '/' + dt + ".csv").readlines(  )), dt
+	
+
+def fetch_rooms(students=0):
+# fetch rooms and respective capacities
+
+
+	if students == "" or students == "0":
+		return nil
+	
+	alter = input("Alteration?")
+	if alter == "":
+		alter = 0
+	else:
+		alter = int(alter)
+		
+	
+
+
+	details=[]
+	rooms=[]
+	capacities=[]
+	max_capacities=[]
+	current_capacities=[]
+
+	total = 0
+	prg_path = os.path.abspath(os.path.dirname(__file__))
+	
+	with open(prg_path + "/rooms.txt") as file1:
+		
+		for line in file1:
+			line_i = line.rstrip()
+			details = line_i.split(",")
+			rooms.append(details[0])
+			max_capacities.append(details[2])
+			current_capacities.append(details[3])
+
+			capacity = int(details[3]) + alter
+			if capacity >= students:
+				capacities.append(students)
+				return capacities,rooms
+				#for room1, capacity1 in zip(rooms,capacities):
+				#	print(room1 + "=>" + str(capacity1))
+				exit()
+			else:
+
+				students = students - capacity
+				if students>0:
+					capacities.append(capacity)
+
+
+def print_heading(DateHeading,room,pdf):		
+	pdf.set_font('Times', '', 22)
+	pdf.cell(0, 10, 'Seating Arrangement - ' + DateHeading, 0,1,'R')
+	pdf.set_font('Times', 'B', 26)
+	pdf.cell(0, 10, 'Room :' + room, 0,1,'R')
+	pdf.set_font('Times', 'B', 16)
+	
+	pdf.cell(12, 10, "Seat" , 1,0)
+	pdf.cell(70, 10, "Student" , 1,0)
+	pdf.cell(50, 10, "RegNo" , 1,0)
+	pdf.cell(12, 10, "Slot" , 1,0)
+	pdf.cell(30, 10, "Paper" , 1,1)
+
+def exception_one(k,room):	
+
+	for rx in ('401','515','511'):
+		if room == rx and k.strip() == 'MDL18CS066':
+			
+			input("LijoZechariahJames cannot sit in " + rx)
+			exit()	
+
+def exception_two(k, studentName):
+	if k.strip() in ('MDL18CS066', 'MUT18ME028'):
+		studentName = " * " + studentName
+		return studentName
+
+def exception_three(k,i,room,first_room):
+	if k.strip() == 'MUT18ME028':
+		if i != 1 and room != first_room:
+			input("Gokul Mohan has to be put in First Room")
+			exit()
+
+def print_pdf_row(row,i,pdf):
+	studentName = row["Student"]
+	studentName = studentName[0:25].title().replace(" ", "")
+	
+	pdf.cell(12, 10, "A" + str(i).zfill(2) , 1,0)
+	pdf.cell(70, 10, studentName , 1,0)
+	pdf.cell(50, 10, row["RegNo"] , 1,0)
+	pdf.cell(12, 10, row["Slot"] , 1,0)
+	pdf.cell(30, 10, row["Paper"].lstrip() , 1,1)
+
+
+def get_uniq_records(my_list):
+	rm = Counter(my_list)
+	uniq_records=[]
+	for rm_i in rm:
+		uniq_records.append(rm_i)
+	return uniq_records
+	
+
+def print_heading_of_summary(DateHeading):
+	pdf_summary = FPDF('L', 'mm', 'A4')
+	#pdf_summary.set_left_margin(10)
+	#pdf_summary.set_right_margin(10)
+
+	pdf_summary.add_page()
+	pdf_summary.set_font('Times', '', 20)
+	pdf_summary.cell(0, 10, 'Seating Arrangement - Summary -' + DateHeading + '                     ', 0,1,'R')
+	pdf_summary.set_font('Times', 'B', 10)
+	return pdf_summary
+
+def print_table_row_heading(pdf_summary,row,width):
+	i=0
+	long_fields=[]
+	pdf_summary.cell(5, 7, "" , 1,align = 'C')
+	
+		
+
+	
+	for field in row:
+		
+		"""if len(field)>5:
+			width = 20
+			long_fields.append(i)
+		else:
+			cell_width = 11"""
+		
+		if i==0:
+			cell_width = 9
+		else:
+			cell_width = width
+			
+		pdf_summary.cell(cell_width, 7, field  , 1,align = 'C')
+		
+		i=i+1		
+
+	pdf_summary.cell(1, 7, "", ln=1)
+	return long_fields
+
+
+
+
+
+
+def print_table_row(pdf_summary, row, long_fields,line_count,width):
+	#width = 15
+	i=0
+	pdf_summary.cell(5, 7, str(line_count+1) , 1,align = 'C')
+	for field in row.keys():
+		"""if i in long_fields:
+			cell_width = 20
+		else:
+			cell_width = 11"""
+		if i==0:
+			cell_width = 9
+		else:
+			cell_width = width
+								
+		pdf_summary.cell(cell_width, 7, row[field] , 1,align = 'C')	
+		i=i+1
+	pdf_summary.cell(1, 7, "" , ln=1)
+
+
+
+
