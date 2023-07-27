@@ -32,6 +32,6 @@ if status<0:
 os.system('cut -d , -f 2- 2.csv > 3.csv')
 assign_seat(rooms,capacities)	
 
-test
+
 
 
