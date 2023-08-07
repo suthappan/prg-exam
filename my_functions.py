@@ -3,6 +3,14 @@ import csv
 import sys
 import pandas as pd
 
+
+from fpdf import FPDF
+from collections import Counter
+from collections import defaultdict
+from array import *
+
+
+
 def readSourceFile():
 	sourceFileName = input("Enter source file name :") or "1.csv"
 	if sourceFileName[-4:] != ".csv":
@@ -257,31 +265,139 @@ def fetch_rooms(students=0):
 			capacity = int(details[1]) + alter
 			no_of_students_accommodated = no_of_students_accommodated + capacity
 
+			#input("student = " + str(students) + ", accomodated = " + str( no_of_students_accommodated) + ", Capacity=" +  str(capacity) )
+			
 			if capacity >= students:
+				capacities.append(capacity)
 				break
 			elif students > capacity:
 				students = students - capacity
-							
-			capacities.append(students)
-					
+				capacities.append(capacity)
+
+		#input("accomodated =" + str( no_of_students_accommodated)+", total = " + str(total_no_of_students) )					
 		if no_of_students_accommodated < total_no_of_students:
 			status = no_of_students_accommodated - total_no_of_students
+			
+			
 		elif no_of_students_accommodated == total_no_of_students:
 			status = 0
 		else:
-			status = total_no_of_students - no_of_students_accommodated
-				
-		
-			
+			#status = total_no_of_students - no_of_students_accommodated
+			status = no_of_students_accommodated - total_no_of_students
+							
 
 		return capacities,rooms,status
-	#print("students = ",students)
 	
 	
-def assign_seat(rooms,capacities):
-	i=1
+def assign_seat(rooms,capacities,students):
+	os.system('echo "000Room,000Seat" > ./tmp/room_seat.csv')
+	stud = 1
 	for capacity,room in zip(capacities,rooms):
-		#for room in rooms:
-		print(str(room) + "," + str(capacity) )
+		seat = 1
+		while seat<=capacity//2 and stud <= students//2 :
+			os.system("echo " + str(room) + ",A" + "{:02d}".format(seat) + ">> ./tmp/room_seat.csv" )
+			seat=seat+1
+			stud = stud + 1
+
+		lastRoomStudents=seat-1
+
+	stud = 1
+	for capacity,room in zip(capacities,rooms):
+		if capacity%2 == 1:
+			capacity = capacity + 1
+		if students%2 == 1:
+			students = students + 1
+		seat=1		
+		while seat<=capacity//2 and stud <= students//2 :
+			os.system("echo " + str(room) + ",B" + "{:02d}".format(seat) + ">> ./tmp/room_seat.csv" )
+			seat=seat+1
+			stud = stud + 1
+
+	if (lastRoomStudents+seat-1) != 0  and (lastRoomStudents+seat-1)<(capacity*.7):
+		os.system('echo  "Last room has ' + str(lastRoomStudents+seat-1) + ' students"')
+
+
+
+def putSerialNumber(fileName):
+	with open(fileName) as file1:
 	
+		#Slno	Room	Seat	Student	RegNo	Slot	Subject
+		#os.system('echo "Slno,Room,Seat,Slot,Subject,RegNo,Student"> ./tmp/final-001.csv')
+		os.system('touch ./tmp/final-001.csv')
+		slno=0
+		prev_room = 0
+		for line in file1:
+			line_i = line.rstrip()
+			details = line_i.split(",")
+			room = details[0]
+			seat = details[1] 
+			student = details[2] 
+			regno = details[3] 
+			slot = details[4] 
+			subject = details[5] 
+			
+			if room[:3] != "000":
+			
+				if prev_room != room:
+					slno = slno + 1
+					
+				os.system('echo "' + str(slno) + ',' + room + ',' + seat + ',' + student + ',' + regno + ',' + slot + ',' + subject + '">> ./tmp/final-001.csv')
+				prev_room = room
+
+
+def print_summary():
+	input_file = "./tmp/summary.csv"
+	class PDF(FPDF):
+		def header(self):
+			# Logo
+			#self.image('MEC_logo.png', 5, 5, 33)
+			self.image('MEC_logo.png', 5,5,20)
+			# Arial bold 15
+			self.set_text_color(128,128,128)
+			self.set_font('Arial', 'B', 15)
+			# Move to the right
+			self.cell(80)
+			# Title
+			self.cell(1, 5, 'Model Engg. College, Thrikkakara', 0, 1, 'C')
+			self.set_font('Arial', 'B', 15)
+			self.cell(80)
+			self.set_text_color(0,0,0)
+			self.cell(1, 5, 'Examination Seating Arrangement', 0, 1, 'C')
+			# Line break
+			self.ln(20)
+
+		def footer(self):
+			# Position at 1.5 cm from bottom
+			self.set_y(-15)
+			# Arial italic 8
+			self.set_font('Arial', 'I', 8)
+			# Page number
+			self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
+
+	# Instantiation of inherited class
+	pdf = PDF()
+	pdf.alias_nb_pages()
+	pdf.add_page()
+	pdf.set_font('Times', '', 12)
+	#for i in range(1, 41):
+	#   pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
+	i=10
+	with open('./tmp/summary.csv') as file1:    	 
+		for line in file1:
+			fields = line.count(',')
+			j=10
+			for col in line.split(','):
+				
+				#input("fields = "+str(fields))
+				col_width = 80/fields
+				#input("i=" + str(i))
+				#input("j=" + str(j))
+				pdf.cell(i,j,col,1,0)
+				j = j + col_width
+			#pdf.cell(1,j,"",0,1)
+			i=i+10
+				
+	    
+	    
+	pdf.output('summary.pdf', 'F')
 

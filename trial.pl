@@ -9,6 +9,7 @@ while(<$in>){
 	chomp; next if /^No/;	# Skip title - all are fixed type records anyway.
 	s/\s+,/,/g; s/,\s+/,/g; s/\s+$//;	# Sanitisation.
 	my (undef,$room,$sn,$name,$rn,$slot,$subj)=split(/,/);
+	#my (undef,$room,$sn,$slot,$subj,$rn,$name)=split(/,/);
 	$room{$room}{$subj}++; $subj{$subj}++; $room_total{$room}++; $total++;
 };
 $sep='","';	# For joining lists to neater CSVs.
