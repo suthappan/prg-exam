@@ -1,0 +1,89 @@
+pdf = FPDF('P', 'mm', 'A4')
+fieldnames = ["No","Room","Seat","Student","RegNo","Slot","Paper"]
+pdf.add_page()
+
+
+
+pdf_summary.output(dt + '_summary.pdf', 'F')
+os.system("pdftk " + dt + "_summary.pdf " + dt + ".pdf cat output " + dt + "_seating.pdf")
+
+
+def print_heading(DateHeading,room,pdf):		
+	pdf.set_font('Times', '', 22)
+	pdf.cell(0, 10, 'Seating Arrangement - ' + DateHeading, 0,1,'R')
+	pdf.set_font('Times', 'B', 26)
+	pdf.cell(0, 10, 'Room :' + room, 0,1,'R')
+	pdf.set_font('Times', 'B', 16)
+	
+	pdf.cell(12, 10, "Seat" , 1,0)
+	pdf.cell(70, 10, "Student" , 1,0)
+	pdf.cell(50, 10, "RegNo" , 1,0)
+	pdf.cell(12, 10, "Slot" , 1,0)
+	pdf.cell(30, 10, "Paper" , 1,1)
+	
+	
+def print_pdf_row(row,i,pdf):
+	studentName = row["Student"]
+	studentName = studentName[0:25].title().replace(" ", "")
+	
+	pdf.cell(12, 10, "A" + str(i).zfill(2) , 1,0)
+	pdf.cell(70, 10, studentName , 1,0)
+	pdf.cell(50, 10, row["RegNo"] , 1,0)
+	pdf.cell(12, 10, row["Slot"] , 1,0)
+	pdf.cell(30, 10, row["Paper"].lstrip() , 1,1)
+	
+def print_heading_of_summary(DateHeading):
+	pdf_summary = FPDF('L', 'mm', 'A4')
+	pdf_summary.add_page()
+	pdf_summary.set_font('Times', '', 20)
+	pdf_summary.cell(0, 10, 'Seating Arrangement - Summary -' + DateHeading, 0,1,'R')
+	pdf_summary.set_font('Times', 'B', 10)
+	return pdf_summary
+	
+	
+	
+def print_table_row_heading(pdf_summary,row):
+	i=0
+	long_fields=[]
+	pdf_summary.cell(10, 7, "" , 1,align = 'C')
+	for field in row:
+		
+		if len(field)>5:
+			width = 20
+			long_fields.append(i)
+		else:
+			width = 12
+			
+		pdf_summary.cell(width, 7, field , 1,align = 'C')
+		
+		i=i+1		
+
+	pdf_summary.cell(1, 7, "", ln=1)
+	return long_fields
+
+
+def print_table_row(pdf_summary, row, long_fields,line_count):
+	width = 15
+	i=0
+	pdf_summary.cell(10, 7, str(line_count) , 1,align = 'C')
+	for field in row.keys():
+		if i in long_fields:
+			width = 20
+		else:
+			width = 12
+		pdf_summary.cell(width, 7, row[field] , 1,align = 'C')	
+		i=i+1
+	pdf_summary.cell(1, 7, "" , ln=1)
+	
+	
+	
+def start_print(outputFile):
+	#pdf.cell(60, 10, 'Powered by FPDF.', 0, 1, 'C')
+	#pdf.cell(width, height, 'text', border=1 or 0, [0: to the right] or [1: to the beginning of the next line], 'L|C|R')
+	A4_width = 210
+	from fpdf import FPDF
+
+	pdf = FPDF('P', 'mm', 'A4')
+	pdf.add_page()
+	pdf.set_font('Arial', 'B', 12)
+	pdf.output(outputFile, 'F')
