@@ -397,15 +397,15 @@ def print_summary():
 	pdf = PDF()
 	pdf.alias_nb_pages()
 	pdf.add_page()
-	pdf.set_font('Times', 'B', 12)
+	pdf.set_font('Times', 'B', 14)
 	#for i in range(1, 41):
 	#   pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
-	page_width = pdf.GetPageWidth()
+	page_width = 152
 	with open('./tmp/summary.csv') as file1:    	 
 		for line in file1:
-			pdf.set_font('Times', 'B', 12)
+			pdf.set_font('Times', 'B', 14)
 			fields = line.count(',')
-			col_width = (page_width/fields)
+			col_width = (page_width/(fields))
 
 			i=0
 			for col in line.split(','):
@@ -418,17 +418,122 @@ def print_summary():
 				else:
 					nextLine=0
 				if i== 0:
-					pdf.set_font('Times', 'B', 12)
+					pdf.set_font('Times', 'B', 14)
 				else:
-					pdf.set_font('Times', '', 12)	
+					pdf.set_font('Times', '', 14)	
 					
-				pdf.cell(col_width,10,cellValue,1,nextLine)
+				pdf.cell(col_width,10,cellValue,1,nextLine,'C')
 				i = i + 1
-			pdf.set_font('Times', '', 12)
-				
-	    
+			pdf.set_font('Times', '', 14)
+	pdf.set_font('Times', 'B', 16)			
+	pdf.cell(0,10,"Total number of students : " + cellValue,0,nextLine,'R')  
 	pdf.output('summary.pdf', 'F')
 
 
-def print_seating(a):
-	print("aa")
+def print_seating(input_file):
+
+	class PDF(FPDF):
+		def header(self):
+			# Logo
+			#self.image('MEC_logo.png', 5, 5, 33)
+			self.image('MEC_logo.png', 5,5,20)
+			# Arial bold 15
+			self.set_text_color(128,128,128)
+			self.set_font('Arial', 'B', 15)
+			# Move to the right
+			self.cell(80)
+			# Title
+			self.cell(1, 5, 'Model Engg. College, Thrikkakara', 0, 1, 'C')
+			self.set_font('Arial', 'B', 15)
+			self.cell(80)
+			self.set_text_color(0,0,0)
+			self.cell(1, 5, 'Examination Seating Arrangement', 0, 1, 'C')
+			# Line break
+			#self.ln(20)
+			self.ln(2)
+
+		def footer(self):
+		
+		
+			self.set_y(-40)
+			pdf.set_font('Times', 'B', 14)			
+			pdf.cell(0,10,"Invigilator : ",0,1,'L')  
+			pdf.cell(0,20,"Absentees : ",1,1,'L')  
+			start_reporting = True		
+
+			# Position at 1.5 cm from bottom
+			self.set_y(-10)
+			# Arial italic 8
+			self.set_font('Arial', 'I', 8)
+			# Page number
+			self.cell(0, 7, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
+
+	# Instantiation of inherited class
+	pdf = PDF()
+	pdf.alias_nb_pages()
+	#pdf.add_page()
+	pdf.set_font('Times', 'B', 14)
+	#for i in range(1, 41):
+	#   pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
+	page_width = 152
+	#printRoom=True
+	current_room = ""
+	row = 1
+	with open(input_file) as file1:	 
+		for line in file1:
+			if row == 1:
+				row = 2
+				#do nothing
+			else:
+			
+				firstRow = False
+				#-------------------
+				fields = line.count(',')
+				col_width = (page_width/4)
+
+				i=0
+				for col in line.split(','):
+					cellValue=col.replace('"','')
+					
+					if cellValue != current_room and i == 0:	#Room
+						pdf.add_page()
+						pdf.set_font('Times', 'B', 20)					
+						pdf.cell(0,6,"Room No: " + cellValue,0,1,'C')
+						pdf.set_font('Times', 'B', 11)					
+						pdf.cell(12,5,"Seat",1,0,'L')
+						pdf.cell(25,5,"Paper",1,0,'L')	
+						pdf.cell(45,5,"RegNo",1,0,'L')	
+						pdf.cell(60,5,"Name",1,0,'L')	
+						pdf.cell(35,5,"",1,1,'L')	
+
+
+						
+					elif i ==1:							#seat				
+						pdf.set_font('Times', '', 13)
+						pdf.cell(12,5,cellValue,1,0,'L')
+					elif i ==7:							#RegNo
+						pdf.set_font('Times', '', 13)
+						pdf.cell(45,5,cellValue,1,0,'L')	
+						
+					elif i ==8:							# Name
+						pdf.set_font('Times', '', 13)
+						pdf.cell(60,5,cellValue,1,0,'L')	
+						pdf.cell(35,5,"",1,1,'L')	
+						
+						
+					elif i ==5:							#Paper
+						pdf.set_font('Times', '', 13)
+						pdf.cell(25,5,cellValue,1,0,'L')	
+						
+					if i == 0:
+						current_room = cellValue	
+						
+					
+					i = i + 1
+				#-------------------
+			
+
+
+	pdf.output('seating.pdf', 'F')
+
+
