@@ -49,13 +49,14 @@ def prepare_csv_file(inputFile):
 	replace_with_abbreviations(inputFile)
 
 
-
-	
-	newCSV = open('./tmp/1.csv', 'w', newline='')
 	#fieldnames = ["000ExamDateYYYYMMDD","000ExamTimeQ","000Event","000Branch","000Slot","000Paper","000Student","000RegNo","000ExamDate","000ExamTime"]
 	fieldnames = ["000ExamDateYYYYMMDD","000ExamTimeQ","000Slot","000Paper","000Branch","000RegNo","000Student","000ExamDate","000ExamTime","000Event"]
-	writer = csv.DictWriter(newCSV, fieldnames=fieldnames)
-	writer.writeheader()
+
+	
+	#newCSV = open('./tmp/1.csv', 'w', newline='')
+	os.system('echo "000ExamDateYYYYMMDD,000ExamTimeQ,000Slot,000Paper,000Branch,000RegNo,000Student,000ExamDate,000ExamTime,000Event" > tmp/1.csv')
+	#writer = csv.DictWriter(newCSV, fieldnames=fieldnames)
+	#writer.writeheader()
 	
 	filterCriteria=getFilterCriteria()
 
@@ -67,7 +68,6 @@ def prepare_csv_file(inputFile):
 		iCount = 0
 
 		for row in reader:
-			#print("lll ..............")
 			#try:
 			Student,RegNo = row['Student'].split("(")
 			RegNo = RegNo.rstrip(RegNo[-1])
@@ -85,36 +85,55 @@ def prepare_csv_file(inputFile):
 				
 			ExamDate = 	row['Exam Date']			
 			#print(Student, RegNo, Paper, Slot, Branch,Event,ExamDate,ExamTime)
-			
 			if(validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTimeQ, Slot, Paper, Branch) ):				
 
-				#input("Valid record")
-				writer.writerow({
-				'000ExamDateYYYYMMDD': ExamDateYYYYMMDD, 
-				'000ExamTimeQ': ExamTimeQ,
-				'000Slot':Slot,
-				'000Paper':Paper,
-				'000Branch':Branch,
-				'000RegNo':RegNo,
-				'000Student':Student.title(),
-				'000ExamDate':ExamDate,
-				'000ExamTime':ExamTime,
-				'000Event': Event
-				})
+				#writer.writerow({
+				#'000ExamDateYYYYMMDD': ExamDateYYYYMMDD, 
+				#'000ExamTimeQ': ExamTimeQ,
+				#'000Slot':Slot,
+				#'000Paper':Paper,
+				#'000Branch':Branch,
+				#'000RegNo':RegNo,
+				#'000Student':Student.title(),
+				#'000ExamDate':ExamDate,
+				#'000ExamTime':ExamTime,
+				#'000Event': Event
+				#})
+				os.system('echo "' + 
+				ExamDateYYYYMMDD  + ',' +  
+				ExamTimeQ  + ',' +  
+				Slot  + ',' +  
+				Paper  + ',' +  
+				Branch  + ',' +  
+				RegNo  + ',' +  
+				Student.title()  + ',' +  
+				ExamDate  + ',' +  
+				ExamTime  + ',' +  
+				Event  +  '" >> tmp/1.csv')
 				oCount = oCount + 1
-
-				
-			#print(".", endln="")
 			iCount = iCount + 1 
-				
-				
+
 			#except:
 			#	sys.exit("Pls ensure the headings in csv are exactly these: >>>>>>Student,Course,Slot,Branch Name,Event,Exam Date,Exam Time<<<<<<")
 		print("Processed " + str(iCount) + " records.")
-		print("Number of records filtered " + str(oCount))
+		print("Number of records filtered oCount" + str(oCount))
+		os.system('wc -l tmp/1.csv')
+	# not working some records are randomly lost
+	# do not know the reason...
+	#sort_csv('tmp/1.csv',"tmp/2.csv",["000ExamDateYYYYMMDD","000ExamTimeQ","000Slot","000Paper","000Branch","000RegNo","000Student","000ExamDate","000ExamTime","000Event"])
 
 
-	sort_csv('tmp/1.csv',"tmp/2.csv",["000ExamDateYYYYMMDD","000ExamTimeQ","000Slot","000Paper","000Branch","000RegNo","000Student","000ExamDate","000ExamTime","000Event"])
+	input("This one")
+	os.system('wc -l tmp/1.csv')
+	input("End")
+
+
+	os.system('sort -o tmp/2.csv -t ,  tmp/1.csv')
+	
+
+	
+	
+	
 	
 	return oCount
 
@@ -378,26 +397,38 @@ def print_summary():
 	pdf = PDF()
 	pdf.alias_nb_pages()
 	pdf.add_page()
-	pdf.set_font('Times', '', 12)
+	pdf.set_font('Times', 'B', 12)
 	#for i in range(1, 41):
 	#   pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
-	i=10
+	page_width = pdf.GetPageWidth()
 	with open('./tmp/summary.csv') as file1:    	 
 		for line in file1:
+			pdf.set_font('Times', 'B', 12)
 			fields = line.count(',')
-			j=10
+			col_width = (page_width/fields)
+
+			i=0
 			for col in line.split(','):
+				cellValue=col.replace('"','')
+				if cellValue=="0":
+					cellValue=""
+					
+				if i== fields:
+					nextLine=1
+				else:
+					nextLine=0
+				if i== 0:
+					pdf.set_font('Times', 'B', 12)
+				else:
+					pdf.set_font('Times', '', 12)	
+					
+				pdf.cell(col_width,10,cellValue,1,nextLine)
+				i = i + 1
+			pdf.set_font('Times', '', 12)
 				
-				#input("fields = "+str(fields))
-				col_width = 80/fields
-				#input("i=" + str(i))
-				#input("j=" + str(j))
-				pdf.cell(i,j,col,1,0)
-				j = j + col_width
-			#pdf.cell(1,j,"",0,1)
-			i=i+10
-				
-	    
 	    
 	pdf.output('summary.pdf', 'F')
 
+
+def print_seating(a):
+	print("aa")
