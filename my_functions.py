@@ -2,13 +2,23 @@ import os
 import csv
 import sys
 import pandas as pd
-
+from datetime import date
+from datetime import timedelta
 
 from fpdf import FPDF
 from collections import Counter
 from collections import defaultdict
 from array import *
 
+ROW_FONT_SIZE = 16
+ROW_HEIGHT = 5.5
+
+
+COL_SEAT = 14
+COL_PAPER	=30
+COL_REGNO	=45
+COL_NAME	=65
+COL_BLANK	= 30
 
 
 def readSourceFile():
@@ -116,16 +126,16 @@ def prepare_csv_file(inputFile):
 			#except:
 			#	sys.exit("Pls ensure the headings in csv are exactly these: >>>>>>Student,Course,Slot,Branch Name,Event,Exam Date,Exam Time<<<<<<")
 		print("Processed " + str(iCount) + " records.")
-		print("Number of records filtered oCount" + str(oCount))
+		#print("Number of records filtered oCount" + str(oCount))
 		os.system('wc -l tmp/1.csv')
 	# not working some records are randomly lost
 	# do not know the reason...
 	#sort_csv('tmp/1.csv',"tmp/2.csv",["000ExamDateYYYYMMDD","000ExamTimeQ","000Slot","000Paper","000Branch","000RegNo","000Student","000ExamDate","000ExamTime","000Event"])
 
 
-	input("This one")
-	os.system('wc -l tmp/1.csv')
-	input("End")
+	#input("This one")
+	#os.system('wc -l tmp/1.csv')
+	#input("End")
 
 
 	os.system('sort -o tmp/2.csv -t ,  tmp/1.csv')
@@ -364,7 +374,7 @@ def putSerialNumber(fileName):
 				prev_room = room
 
 
-def print_summary():
+def print_summary(report_heading):
 	input_file = "./tmp/summary.csv"
 	class PDF(FPDF):
 		def header(self):
@@ -382,6 +392,12 @@ def print_summary():
 			self.cell(80)
 			self.set_text_color(0,0,0)
 			self.cell(1, 5, 'Examination Seating Arrangement', 0, 1, 'C')
+			self.set_font('Arial', 'B', 20)
+			self.cell(0, 5, report_heading, 0, 1, 'R')
+			
+			
+			
+			
 			# Line break
 			self.ln(20)
 
@@ -430,7 +446,7 @@ def print_summary():
 	pdf.output('summary.pdf', 'F')
 
 
-def print_seating(input_file):
+def print_seating(input_file,report_heading):
 
 	class PDF(FPDF):
 		def header(self):
@@ -455,7 +471,7 @@ def print_seating(input_file):
 		def footer(self):
 		
 		
-			self.set_y(-40)
+			self.set_y(-35)
 			pdf.set_font('Times', 'B', 14)			
 			pdf.cell(0,10,"Invigilator : ",0,1,'L')  
 			pdf.cell(0,20,"Absentees : ",1,1,'L')  
@@ -498,32 +514,31 @@ def print_seating(input_file):
 					if cellValue != current_room and i == 0:	#Room
 						pdf.add_page()
 						pdf.set_font('Times', 'B', 20)					
-						pdf.cell(0,6,"Room No: " + cellValue,0,1,'C')
-						pdf.set_font('Times', 'B', 11)					
-						pdf.cell(12,5,"Seat",1,0,'L')
-						pdf.cell(25,5,"Paper",1,0,'L')	
-						pdf.cell(45,5,"RegNo",1,0,'L')	
-						pdf.cell(60,5,"Name",1,0,'L')	
-						pdf.cell(35,5,"",1,1,'L')	
-
+						pdf.cell(0,6,"Room No: " + cellValue + "         " + report_heading,0,1,'R')
+						pdf.set_font('Times', 'B', ROW_FONT_SIZE-1)					
+						pdf.cell(COL_SEAT,ROW_HEIGHT-1,"Seat",1,0,'L')	
+						pdf.cell(COL_PAPER,ROW_HEIGHT-1,"Paper",1,0,'L')	
+						pdf.cell(COL_REGNO,ROW_HEIGHT-1,"RegNo",1,0,'L')	
+						pdf.cell(COL_NAME,ROW_HEIGHT-1,"Name",1,0,'L')		
+						pdf.cell(COL_BLANK,ROW_HEIGHT-1,"",1,1,'L')			
 
 						
 					elif i ==1:							#seat				
-						pdf.set_font('Times', '', 13)
-						pdf.cell(12,5,cellValue,1,0,'L')
+						pdf.set_font('Times', '', ROW_FONT_SIZE)
+						pdf.cell(COL_SEAT,ROW_HEIGHT,cellValue,1,0,'L')
 					elif i ==7:							#RegNo
-						pdf.set_font('Times', '', 13)
-						pdf.cell(45,5,cellValue,1,0,'L')	
+						pdf.set_font('Times', '', ROW_FONT_SIZE)
+						pdf.cell(COL_REGNO,ROW_HEIGHT,cellValue,1,0,'L')	
 						
 					elif i ==8:							# Name
-						pdf.set_font('Times', '', 13)
-						pdf.cell(60,5,cellValue,1,0,'L')	
-						pdf.cell(35,5,"",1,1,'L')	
+						pdf.set_font('Times', '', ROW_FONT_SIZE)
+						pdf.cell(COL_NAME,ROW_HEIGHT,cellValue,1,0,'L')	
+						pdf.cell(COL_BLANK,ROW_HEIGHT,"",1,1,'L')	
 						
 						
 					elif i ==5:							#Paper
-						pdf.set_font('Times', '', 13)
-						pdf.cell(25,5,cellValue,1,0,'L')	
+						pdf.set_font('Times', '', ROW_FONT_SIZE)
+						pdf.cell(COL_PAPER,ROW_HEIGHT,cellValue,1,0,'L')	
 						
 					if i == 0:
 						current_room = cellValue	
