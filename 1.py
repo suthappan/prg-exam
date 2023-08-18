@@ -9,20 +9,28 @@ sourceFileName = readSourceFile()
 if not sourceFileName:
 	exit("\n\nSorry, Unable to find a proper source file...!")
 
-number_of_records =  prepare_csv_file(sourceFileName)
+supply_or_regular = input("Supplymentary or Regular s/r/n?")
+if supply_or_regular == "s":
+	supply_or_regular = "(S)"
+elif supply_or_regular == "r":
+	supply_or_regular = "(R)"
+elif supply_or_regular == "":
+	supply_or_regular = ""
+
+number_of_records =  prepare_csv_file(sourceFileName, supply_or_regular)
 
 
 
 
 
 print("\n\n..moving forward, source file complies with expected format")
-print("Number of records = " + str(number_of_records))
+print("Total number of students = " + str(number_of_records))
 
 
 #my_function.py.old
 
 #capacities,rooms = fetch_rooms(number_of_records)
-capacities,rooms,status=fetch_rooms(number_of_records)
+capacities,rooms,status=fetch_rooms(number_of_records, supply_or_regular)
 
 #capacities,rooms,status = k
 #print(capacities)
@@ -66,17 +74,35 @@ os.system(commandString)
 
 
 os.system('perl ' + prg_path + '/trial.pl ./tmp/final-002.csv > ./tmp/summary.csv')
+
+mySession = input("Session :AN/FN? ")
+
 dt1=str(date.today()+timedelta(days=1)).replace("/","-")
-dt = input(dt1)
+
+if supply_or_regular == "(S)":
+	suffix="_Supply"
+elif supply_or_regular == "(R)":
+	suffix="_Regular"
+
+dt = input('Enter fileName[by default "' + dt1 + '_' + mySession + suffix + '_seating'  + '.pdf"]')
 if len(dt) == 1:
-	dt = dt1[8:] + "{:02d}".format(dt)
+	dt = dt1[0:8] + dt.zfill(2)
+elif len(dt) == 2:
+	dt = dt1[0:8] + dt
+elif len(dt) == 10:
+	dt.replace("/","-")
 elif dt == "":
 	dt= dt1
 
-
-mySession = input("Session :")
-
-report_heading = dt + " " + mySession
+pattern = '202[3-9].[01][0-9].[0-3][0-9]'
+if re.match(pattern,dt):
+	day_of_week = datetime.date(int(dt[0:4]),int(dt[5:7]),int(dt[8:10])).strftime('%a')
+report_heading = dt + " " + day_of_week  + " " + mySession + '(' + suffix[1:] + ")   "
 print_summary(report_heading)
 print_seating('tmp/seating-002-sorted-on-seat-001.csv',report_heading)
-os.system('pdftk summary.pdf seating.pdf cat output ' + dt + mySession + '_seating.pdf')
+
+if not os.path.exists(prg_path + '/bucket'):
+	os.makedirs( prg_path + '/bucket'  )
+os.system('pdftk summary.pdf seating.pdf cat output bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf')
+os.system('nautilus ' + prg_path + '/bucket')
+os.system('evince ' + prg_path + '/bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf')

@@ -1,6 +1,7 @@
 import os
 import csv
 import sys
+import datetime
 import pandas as pd
 from datetime import date
 from datetime import timedelta
@@ -9,6 +10,7 @@ from fpdf import FPDF
 from collections import Counter
 from collections import defaultdict
 from array import *
+import re
 
 ROW_FONT_SIZE = 16
 ROW_HEIGHT = 5.5
@@ -39,11 +41,11 @@ def readSourceFile():
 	os.system('rm -r ./tmp')
 	os.system('mkdir ./tmp')
 	os.system('cp ./' + sourceFileName + " ./tmp/" + sourceFileName)
-	input("waiting....")
+	input("Press any key to continue ....")
 	return "./tmp/" + sourceFileName
 
 
-def prepare_csv_file(inputFile):
+def prepare_csv_file(inputFile,supply_or_regular):
 	
 
 	""" 	Function to extract records from csv with Header Names => 	
@@ -95,7 +97,7 @@ def prepare_csv_file(inputFile):
 				
 			ExamDate = 	row['Exam Date']			
 			#print(Student, RegNo, Paper, Slot, Branch,Event,ExamDate,ExamTime)
-			if(validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTimeQ, Slot, Paper, Branch) ):				
+			if(validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTimeQ, Slot, Paper, Branch,Event,supply_or_regular) ):				
 
 				#writer.writerow({
 				#'000ExamDateYYYYMMDD': ExamDateYYYYMMDD, 
@@ -109,6 +111,12 @@ def prepare_csv_file(inputFile):
 				#'000ExamTime':ExamTime,
 				#'000Event': Event
 				#})
+
+
+			
+					
+			
+				
 				os.system('echo "' + 
 				ExamDateYYYYMMDD  + ',' +  
 				ExamTimeQ  + ',' +  
@@ -127,7 +135,7 @@ def prepare_csv_file(inputFile):
 			#	sys.exit("Pls ensure the headings in csv are exactly these: >>>>>>Student,Course,Slot,Branch Name,Event,Exam Date,Exam Time<<<<<<")
 		print("Processed " + str(iCount) + " records.")
 		#print("Number of records filtered oCount" + str(oCount))
-		os.system('wc -l tmp/1.csv')
+		#os.system('wc -l tmp/1.csv')
 	# not working some records are randomly lost
 	# do not know the reason...
 	#sort_csv('tmp/1.csv',"tmp/2.csv",["000ExamDateYYYYMMDD","000ExamTimeQ","000Slot","000Paper","000Branch","000RegNo","000Student","000ExamDate","000ExamTime","000Event"])
@@ -200,7 +208,7 @@ def getFilterCriteria():
 
 
 	
-def validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTime, Slot, Paper, Branch):
+def validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTime, Slot, Paper, Branch,Event, supply_or_regular):
 
 	retVal = True
 
@@ -211,7 +219,8 @@ def validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTime, Slot, Paper, Branch):
 	filterBranch = filterCriteria[4]
 	
 	
-
+	if supply_or_regular not in Event and supply_or_regular != "":
+		retVal = False
 	
 
 	#if((ExamDateYYYYMMDD not in filterDate.split(",")) or filterDate == ""):
@@ -254,8 +263,18 @@ def validRecord(filterCriteria,ExamDateYYYYMMDD, ExamTime, Slot, Paper, Branch):
 	return retVal
 	
 	
-def fetch_rooms(students=0):
+def fetch_rooms(students=0,supply_or_regular=""):
 # fetch rooms and respective capacities
+
+	if supply_or_regular == "(S)":
+		room_file = "s_rooms.txt"
+	elif supply_or_regular == "(R)":
+		room_file = "r_rooms.txt"
+	else:
+		room_file = "rooms.txt"
+	
+	print("Rooms are taken from " + room_file)
+
 	status=0
 	
 
@@ -282,7 +301,7 @@ def fetch_rooms(students=0):
 	prg_path = os.path.abspath(os.path.dirname(__file__))
 	
 	no_of_students_accommodated = 0
-	with open(prg_path + "/rooms.txt") as file1:
+	with open(prg_path + "/" + room_file) as file1:
 		
 		for line in file1:
 			line_i = line.rstrip()
@@ -393,7 +412,8 @@ def print_summary(report_heading):
 			self.set_text_color(0,0,0)
 			self.cell(1, 5, 'Examination Seating Arrangement', 0, 1, 'C')
 			self.set_font('Arial', 'B', 20)
-			self.cell(0, 5, report_heading, 0, 1, 'R')
+			self.cell(0, 7, "", 0, 1, 'R')
+			self.cell(0, 4, report_heading, 0, 1, 'R')
 			
 			
 			
@@ -421,7 +441,7 @@ def print_summary(report_heading):
 		for line in file1:
 			pdf.set_font('Times', 'B', 14)
 			fields = line.count(',')
-			col_width = (page_width/(fields))
+			col_width = (page_width/(fields+1))
 
 			i=0
 			for col in line.split(','):
@@ -443,7 +463,7 @@ def print_summary(report_heading):
 			pdf.set_font('Times', '', 14)
 	pdf.set_font('Times', 'B', 16)			
 	pdf.cell(0,10,"Total number of students : " + cellValue,0,nextLine,'R')  
-	pdf.output('summary.pdf', 'F')
+	pdf.output('tmp/summary.pdf', 'F')
 
 
 def print_seating(input_file,report_heading):
@@ -471,10 +491,10 @@ def print_seating(input_file,report_heading):
 		def footer(self):
 		
 		
-			self.set_y(-35)
+			self.set_y(-28)
 			pdf.set_font('Times', 'B', 14)			
-			pdf.cell(0,10,"Invigilator : ",0,1,'L')  
-			pdf.cell(0,20,"Absentees : ",1,1,'L')  
+			pdf.cell(0,17,"Absentees:                                                               Invigilator : ________________",0,1,'L')  
+			#pdf.cell(0,17,"Absentees : ",1,1,'L')  
 			start_reporting = True		
 
 			# Position at 1.5 cm from bottom
@@ -549,6 +569,6 @@ def print_seating(input_file,report_heading):
 			
 
 
-	pdf.output('seating.pdf', 'F')
+	pdf.output('tmp/seating.pdf', 'F')
 
 
