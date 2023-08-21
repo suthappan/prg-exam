@@ -98,11 +98,19 @@ pattern = '202[3-9].[01][0-9].[0-3][0-9]'
 if re.match(pattern,dt):
 	day_of_week = datetime.date(int(dt[0:4]),int(dt[5:7]),int(dt[8:10])).strftime('%a')
 report_heading = dt + " " + day_of_week  + " " + mySession + '(' + suffix[1:] + ")   "
+
+fileName = prg_path + '/bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf'
 print_summary(report_heading)
 print_seating('tmp/seating-002-sorted-on-seat-001.csv',report_heading)
 
 if not os.path.exists(prg_path + '/bucket'):
 	os.makedirs( prg_path + '/bucket'  )
-os.system('pdftk summary.pdf seating.pdf cat output bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf')
-os.system('nautilus ' + prg_path + '/bucket')
-os.system('evince ' + prg_path + '/bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf')
+#os.system('pdftk tmp/summary.pdf tmp/seating.pdf cat output bucket/' + dt + "_" + mySession + suffix + '_seating' + '.pdf')
+os.system('pdftk tmp/summary.pdf tmp/seating.pdf cat output ' + fileName)
+os.system('nautilus ' + prg_path + '/bucket &')
+os.system('evince ' + fileName + ' &')
+
+
+
+
+

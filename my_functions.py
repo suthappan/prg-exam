@@ -11,6 +11,10 @@ from collections import Counter
 from collections import defaultdict
 from array import *
 import re
+from io import BytesIO
+
+
+
 
 ROW_FONT_SIZE = 16
 ROW_HEIGHT = 5.5
@@ -21,6 +25,8 @@ COL_PAPER	=30
 COL_REGNO	=45
 COL_NAME	=65
 COL_BLANK	= 30
+
+
 
 
 def readSourceFile():
@@ -400,6 +406,7 @@ def print_summary(report_heading):
 			# Logo
 			#self.image('MEC_logo.png', 5, 5, 33)
 			self.image('MEC_logo.png', 5,5,20)
+			
 			# Arial bold 15
 			self.set_text_color(128,128,128)
 			self.set_font('Arial', 'B', 15)
@@ -428,7 +435,7 @@ def print_summary(report_heading):
 			self.set_font('Arial', 'I', 8)
 			# Page number
 			self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
-
+			
 	# Instantiation of inherited class
 	pdf = PDF()
 	pdf.alias_nb_pages()
@@ -463,6 +470,12 @@ def print_summary(report_heading):
 			pdf.set_font('Times', '', 14)
 	pdf.set_font('Times', 'B', 16)			
 	pdf.cell(0,10,"Total number of students : " + cellValue,0,nextLine,'R')  
+	
+
+	
+	
+	
+	
 	pdf.output('tmp/summary.pdf', 'F')
 
 
@@ -503,7 +516,6 @@ def print_seating(input_file,report_heading):
 			self.set_font('Arial', 'I', 8)
 			# Page number
 			self.cell(0, 7, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
-
 	# Instantiation of inherited class
 	pdf = PDF()
 	pdf.alias_nb_pages()
